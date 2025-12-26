@@ -25,8 +25,8 @@ public class ReviewController {
         this.userService = userService;
     }
 
-    // POST /cars/{id}/reviews — CLIENT
-    @PreAuthorize("hasRole('CLIENT')")
+    // POST /cars/{carId}/reviews — CLIENT
+    @PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
     @PostMapping
     public ReviewDto addReview(@PathVariable Long carId,
                                @RequestBody @Valid ReviewCreateRequest request) {
@@ -35,12 +35,10 @@ public class ReviewController {
         return ReviewMapper.toDto(created);
     }
 
-    // GET /cars/{id}/reviews — public
-    @PreAuthorize("permitAll()")
+    // GET /cars/{carId}/reviews — public
     @GetMapping
     public List<ReviewDto> getReviews(@PathVariable Long carId) {
-        return reviewService.getReviewsForCar(carId)
-                .stream()
+        return reviewService.getReviewsForCar(carId).stream()
                 .map(ReviewMapper::toDto)
                 .toList();
     }

@@ -28,8 +28,8 @@ public class BookingController {
         this.userService = userService;
     }
 
-    // POST /bookings — CLIENT creates booking
-    @PreAuthorize("hasRole('CLIENT')")
+    // POST /bookings — CLIENT
+    @PreAuthorize("hasRole('CLIENT') or hasRole('ADMIN')")
     @PostMapping("/bookings")
     public ResponseEntity<BookingDto> createBooking(@RequestBody @Valid BookingCreateRequest request) {
         User client = userService.getCurrentUser();
@@ -42,20 +42,18 @@ public class BookingController {
         );
 
         BookingDto body = BookingMapper.toDto(created);
-        return ResponseEntity
-                .created(URI.create("/bookings/" + body.getId()))
-                .body(body);
+        return ResponseEntity.created(URI.create("/bookings/" + body.getId())).body(body);
     }
 
-    // GET /bookings/{id} — authenticated users (simple rule for now)
+    // GET /bookings/{id} — any authenticated user (fine for now)
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/bookings/{id}")
     public BookingDto getBookingById(@PathVariable Long id) {
         return BookingMapper.toDto(bookingService.getById(id));
     }
 
-    // PUT /bookings/{id}/status — OWNER changes status
-    @PreAuthorize("hasRole('OWNER')")
+    // PUT /bookings/{id}/status — OWNER (owner validation already in service)
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @PutMapping("/bookings/{id}/status")
     public BookingDto changeStatus(@PathVariable Long id,
                                    @RequestBody @Valid BookingStatusUpdateRequest request) {
@@ -63,13 +61,12 @@ public class BookingController {
         return BookingMapper.toDto(bookingService.changeStatus(id, request.getStatus(), owner));
     }
 
-    // GET /users/me/bookings — authenticated users
+    // GET /users/me/bookings — authenticated
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/users/me/bookings")
     public List<BookingDto> getMyBookings() {
         User user = userService.getCurrentUser();
-        return bookingService.getBookingsForUser(user)
-                .stream()
+        return bookingService.getBookingsForUser(user).stream()
                 .map(BookingMapper::toDto)
                 .toList();
     }

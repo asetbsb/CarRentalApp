@@ -15,16 +15,15 @@ spring:
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
 
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
 
-  app:
-    jwt:
-      secret: "CHANGE_ME_TO_LONG_RANDOM_SECRET_32+CHARS_MINIMUM"
-      access-token-ttl-minutes: 60
+app:
+  jwt:
+    secret: "bM23WSufUiMjUfob57+S8/FUlPbLlxWBYs1wnAQv5vYy9Znfd2vDmfeQwHsH8XT2"
+    access-token-ttl-minutes: 60
 
 server:
   port: 8080

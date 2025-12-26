@@ -29,7 +29,7 @@ public class CarController {
     }
 
     // POST /cars (OWNER)
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<CarDto> create(@RequestBody @Valid CarCreateRequest request) {
         User owner = userService.getCurrentUser();
@@ -42,24 +42,21 @@ public class CarController {
     }
 
     // GET /cars (available) - public
-    @PreAuthorize("permitAll()")
     @GetMapping
     public List<CarDto> getAvailable() {
-        return carService.getAllAvailableCars()
-                .stream()
+        return carService.getAllAvailableCars().stream()
                 .map(CarMapper::toResponse)
                 .toList();
     }
 
     // GET /cars/{id} - public
-    @PreAuthorize("permitAll()")
     @GetMapping("/{id}")
     public CarDto getById(@PathVariable Long id) {
         return CarMapper.toResponse(carService.getById(id));
     }
 
     // PUT /cars/{id} (OWNER)
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public CarDto update(@PathVariable Long id, @RequestBody @Valid CarUpdateRequest request) {
         User owner = userService.getCurrentUser();
@@ -72,7 +69,7 @@ public class CarController {
     }
 
     // DELETE /cars/{id} (OWNER)
-    @PreAuthorize("hasRole('OWNER')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         User owner = userService.getCurrentUser();
