@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: car-rental
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/car_rental
+    username: a11
+    password: aset-admin
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # ?? ????? ??????????, ????? ????? 'validate'
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  app:
+    jwt:
+      secret: "CHANGE_ME_TO_LONG_RANDOM_SECRET_32+CHARS_MINIMUM"
+      access-token-ttl-minutes: 60
+
+server:
+  port: 8080
