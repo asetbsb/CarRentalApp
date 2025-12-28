@@ -4,6 +4,7 @@ import com.asset.car_rental.entity.Booking;
 import com.asset.car_rental.entity.Car;
 import com.asset.car_rental.entity.User;
 import com.asset.car_rental.model.BookingStatus;
+import com.asset.car_rental.model.CarStatus;
 import com.asset.car_rental.repository.BookingRepository;
 import com.asset.car_rental.repository.CarRepository;
 import com.asset.car_rental.service.BookingService;
@@ -32,20 +33,45 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Booking createBooking(Long carId, User client,
                                  LocalDate startDate, LocalDate endDate) {
-        Car car = carRepository.findById(carId)
-                .orElseThrow(() -> new EntityNotFoundException("Car not found: " + carId));
 
-        if (endDate.isBefore(startDate)) {
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date are required");
+        }
+
+        // We use [start, end) semantics (pickup inclusive, return exclusive).
+        // Therefore, endDate must be strictly after startDate.
+        if (!endDate.isAfter(startDate)) {
             throw new IllegalArgumentException("End date must be after start date");
         }
 
-        long days = ChronoUnit.DAYS.between(startDate, endDate);
-        if (days <= 0) {
-            days = 1; // minimal charge
+        // Lock the car row to reduce double-booking race conditions.
+        Car car = carRepository.findByIdForUpdate(carId)
+                .orElseThrow(() -> new EntityNotFoundException("Car not found: " + carId));
+
+        // Fleet availability rule (optional but commonly expected)
+        if (car.getStatus() != CarStatus.AVAILABLE) {
+            // conflict, not input validation
+            throw new IllegalStateException("Car is not available for booking");
         }
 
-        BigDecimal total = car.getPricePerDay()
-                .multiply(BigDecimal.valueOf(days));
+        // Overlap rule: block booking if car already has an "active" booking in the requested range
+        List<BookingStatus> activeStatuses = List.of(BookingStatus.CREATED, BookingStatus.APPROVED);
+
+        boolean overlapExists =
+                bookingRepository.existsByCarIdAndStatusInAndStartDateLessThanAndEndDateGreaterThan(
+                        carId,
+                        activeStatuses,
+                        endDate,
+                        startDate
+                );
+
+        if (overlapExists) {
+            // conflict, not input validation
+            throw new IllegalStateException("Car is already booked for the selected dates");
+        }
+
+        long days = ChronoUnit.DAYS.between(startDate, endDate); // guaranteed >= 1 by validation above
+        BigDecimal total = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
 
         Booking booking = new Booking();
         booking.setCar(car);

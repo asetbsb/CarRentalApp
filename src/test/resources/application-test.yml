@@ -1,0 +1,12 @@
+app:
+  jwt:
+    secret: test-test-test-test-test-test-test-test
+    access-token-ttl-minutes: 60
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true

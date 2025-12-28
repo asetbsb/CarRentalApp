@@ -25,6 +25,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body("BAD_REQUEST", ex.getMessage()));
     }
 
+    /**
+     * Business conflicts (overlapping booking, car unavailable, etc.)
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body("CONFLICT", ex.getMessage()));
+    }
+
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<Map<String, Object>> handleSecurity(SecurityException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body("FORBIDDEN", ex.getMessage()));
